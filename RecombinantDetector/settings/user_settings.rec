@@ -1,4 +1,4 @@
-useHeaderData 1
+useHeaderData 0
 timeThresholdBetweenParentsAndChild 2678400
 multiFileMode 0
 threadsCount 6
