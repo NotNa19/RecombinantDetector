@@ -23,12 +23,13 @@ To build a project on Linux using CMake, you need to follow these steps:
 Before starting, you need to generate a P-values table. You can do this for the first time and then reuse it.
 1. In the `build` folder execute `./RecDetector -gen-p table500 500`. The generation may take several minutes.
 2. Move the `table500` to a convenient place.
-3. Open the `source/settings/UserSettings.rec`.
-4. Find the `pTableFilePath` entry and specify the path to the table.
+3. Open the `RecombinantDetector/settings/UserSettings.rec`.
+4. Find the `pTableFilePath` entry and specify the path to the table. For example:
+   >pTableFilePath /home/adev/Work/ptable/table500
 
 Now you can finally run the application.
-1. Download any `.fasta` file with aligned sequences (we will use `testSeqs/ebola_aligned.fasta` for example).
-2. Execute `./RecDetector -detect testSeqs/ebola_aligned.fasta`. Wait for the end of the process.
+1. Download any `.fasta` file with aligned sequences (we will use `genomeData/viruses/ebola_aligned.fasta` for example).
+2. Execute `./RecDetector -detect ../../genomeData/viruses/ebola_aligned.fasta`. Wait for the end of the process.
 3. Now you can find several files with the results in the `build` folder. The most interesting one is `results.csv'. It provides detailed information about the recombinants found.
 
 # Ru
@@ -56,12 +57,13 @@ Now you can finally run the application.
 Перед запуском необходимо сгенерировать таблицу P-значений. Можно сделать это для первого раза и затем переиспользовать её.
 1. В папке `build` выполните `./RecDetector -gen-p table500 500`. Генерация может занять несколько минут.
 2. Переместите получившуюся таблицу в удобное место.
-3. Откройте `source/settings/UserSettings.rec`.
-4. Найдите поле `pTableFilePath` и укажите путь к таблице.
+3. Откройте `RecombinantDetector/settings/UserSettings.rec`.
+4. Найдите поле `pTableFilePath` и укажите путь к таблице. Например,
+   >pTableFilePath /home/adev/Work/ptable/table500
 
 Теперь можно провести тестовый запуск приложения.
-1. Скачайте любой `.fasta` файл с выровненными последовательностями (далее для примера будем использовать `testSeqs/ebola_aligned.fasta`).
-2. Выполните `./RecDetector -detect testSeqs/ebola_aligned.fasta`.
+1. Скачайте любой `.fasta` файл с выровненными последовательностями (далее для примера будем использовать `genomeData/viruses/ebola_aligned.fasta`).
+2. Выполните `./RecDetector -detect ../../genomeData/viruses/ebola_z_aligned.fasta`.
 3. После окончания работы в папке build будет создано несколько файлов с результатами. Самый интересный — `results.csv`. В нём можнно получить подробную информацию о найденных рекомбинантах.
 
 **Пример таблицы с результатами:**
@@ -113,6 +115,6 @@ Now you can finally run the application.
 
 ## Тестовые данные
 Для тестирования приложения мы использовали искуственно созданные и реальные данные.
-Скрипты для генерации искуственных последовательностей можно найти в `genomeData/generation`. Там же доступны некоторые примеры сгенерированных fasta файлов. Позже документация будет дополнена инструкцией по использованию этих скриптов.  
+Скрипты для генерации искуственных последовательностей можно найти в `genomeData/generated`. Там же доступны некоторые примеры сгенерированных fasta файлов. Позже документация будет дополнена инструкцией по использованию этих скриптов.  
 
 В папке `genomeData/viruses` можно найти 4 набора геномов. Это грипп A H1N1 (белок PB2), лихорадка Денге (серотип 2, Азия) , вирус Эбола (заирский штамм) и коронавирус SARS-CoV-2 (Россия).
