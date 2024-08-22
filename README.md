@@ -16,7 +16,7 @@ In theory, for some cases this can speed up the work dozens of times.
 ## Quick start
 To build a project on Linux using CMake, you need to follow these steps:
 1. Download and unzip the project files.
-2. Create a `build` folder in the root folder of the project and navigate to it.
+2. Create a `build` folder in the root folder of the project (near `CMakeLists.txt` file) and navigate to it.
 3. Execute `cmake -DCMAKE_BUILD_TYPE=Release ..`.
 4. Execute `make`.
 
@@ -49,7 +49,7 @@ Now you can finally run the application.
 ## Быстрый старт
 Для сборки проекта на Linux c использованием CMake выполните следующие шаги:
 1. Скачайте и распакуйте файлы проекта.
-2. Создайте папку `build` в корневой папке проекта и перейдите в неё.
+2. Создайте папку `build` в корневой папке проекта (рядом с `CMakeLists.txt`) и перейдите в неё.
 3. В терминале выполните `cmake -DCMAKE_BUILD_TYPE=Release ..`.
 4. В терминале выполните `make`.
 
