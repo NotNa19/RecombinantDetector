@@ -151,5 +151,5 @@ void Sequence::setRecombinantType(Sequence::RecombinantType newRecombinantType) 
 }
 
 bool Sequence::isOlderThan(const Sequence& other) const {
-	return (m_data - other.data()) > UserSettings::instance().timeThresholdBetweenParentsAndChild;
+	return (other.data() - m_data) > UserSettings::instance().timeThresholdBetweenParentsAndChild;
 }
