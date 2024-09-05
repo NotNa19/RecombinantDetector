@@ -418,3 +418,21 @@ void App::setExecutablePath(const char* executablePath) {
 		setExecutablePath(std::string(executablePath));
 	}
 }
+
+std::string App::getCurrentTime() {
+	auto now = std::chrono::system_clock::now();
+	auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+	auto now_time_t = std::chrono::system_clock::to_time_t(now);
+	std::tm now_tm;
+
+#ifdef _WIN32
+	localtime_s(&now_tm, &now_time_t);  // Windows
+#else
+	localtime_r(&now_time_t, &now_tm);  // Linux/Unix
+#endif
+
+	std::ostringstream oss;
+	oss << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S")
+		<< '.' << std::setw(3) << std::setfill('0') << now_ms.count();
+	return oss.str();
+}

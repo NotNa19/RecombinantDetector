@@ -1,4 +1,7 @@
 #include "RecombinantDetector.h"
+
+#include <numeric> 
+
 #include "../UserSettings.h"
 #include "../../utils/ThreadPool.h"
 
@@ -286,11 +289,10 @@ void RecombinantDetector::analyze() {
 	// This flag indicates if the progressing should be stopped
 	bool isStopped = false;
 
-	time_t lastTime =
-		time(nullptr) - UserSettings::instance().UpdateMonitorInSec - 1;
-
 	size_t threadCount = UserSettings::instance().threadsCount;
-	ThreadPool pool(threadCount);
+	if (threadCount > childSequences.size()) threadCount = childSequences.size();
+
+	ThreadPool pool(threadCount + 1);
 	std::vector<std::future<void>> results;
 
 	std::vector<size_t> numsSkipped(threadCount);
@@ -298,21 +300,21 @@ void RecombinantDetector::analyze() {
 	std::vector<size_t> numsApproximated(threadCount);
 	std::vector<size_t> numsRecombinantTriplets(threadCount);
 	std::vector<size_t> numsTripletsSkippedByTime(threadCount);
+	std::vector<size_t> performedOuterLoops(threadCount);
 	std::vector<double> minPvals(threadCount);
 	std::vector<TripletPool> tripletPools(threadCount);
+	std::vector<bool> threadIsFinised(threadCount);
 
 	for (int i = 0; i < threadCount; ++i) {
 		results.emplace_back(
-			pool.enqueue([i, &childSequences, &parentSequences, threadCount, this, &numsSkipped, &numsComputedExactly, &numsApproximated, &minPvals, &numsRecombinantTriplets, &tripletPools, &numsTripletsSkippedByTime]
+			pool.enqueue([i, &performedOuterLoops, &threadIsFinised, &childSequences, &parentSequences, threadCount, this, &numsSkipped, &numsComputedExactly, &numsApproximated, &minPvals, &numsRecombinantTriplets, &tripletPools, &numsTripletsSkippedByTime]
 				{
 					size_t chunkSize = childSequences.size() / threadCount;
 					size_t begin = i * chunkSize;
 					size_t end = (i < threadCount - 1) ? ((i + 1) * chunkSize - 1) : childSequences.size();
 
 					minPvals[i] = 1.0;
-					double performedOuterLoops = 0.0;
-					time_t lastTime =
-						time(nullptr) - UserSettings::instance().UpdateMonitorInSec - 1;
+					performedOuterLoops[i] = 0.0;
 
 					if (UserSettings::instance().calculateAllBreakpoints) {
 						tripletPools[i].setStorageMode(TripletPool::StorageMode::AllTriplets);
@@ -332,13 +334,7 @@ void RecombinantDetector::analyze() {
 								numsTripletsSkippedByTime[i] += parentSequences.size();
 								continue;
 							}
-							performedOuterLoops += 1.0 * threadCount;
-
-							time_t currentTime = time(nullptr);
-							if (currentTime - lastTime >= UserSettings::instance().UpdateMonitorInSec && i == 0) {
-								showProgress(performedOuterLoops, false, numsRecombinantTriplets, minPvals, numsTripletsSkippedByTime);
-								lastTime = currentTime;
-							}
+							performedOuterLoops[i] += 1.0;
 
 							for (const auto& mum : parentSequences) {
 								if (mum == dad || mum == child) {
@@ -389,9 +385,26 @@ void RecombinantDetector::analyze() {
 							}
 						}
 					}
+					threadIsFinised[i] = true;
 				})
 		);
 	}
+
+	results.emplace_back(pool.enqueue([this, &performedOuterLoops, &numsRecombinantTriplets, &minPvals, &numsTripletsSkippedByTime, &threadIsFinised] {	
+		time_t lastTime =
+			time(nullptr) - UserSettings::instance().UpdateMonitorInSec - 1;
+		
+		while (true) {
+			time_t currentTime = time(nullptr);
+			if (currentTime - lastTime >= UserSettings::instance().UpdateMonitorInSec) {
+				double outerLoops = std::accumulate(performedOuterLoops.begin(), performedOuterLoops.end(), 0);
+				showProgress(outerLoops, false, numsRecombinantTriplets, minPvals, numsTripletsSkippedByTime);
+				lastTime = currentTime;
+
+				if (std::all_of(threadIsFinised.begin(), threadIsFinised.end(), [](bool v) { return v; })) return;
+			}
+		}
+		}));
 
 	for (auto&& result : results) result.get();
 

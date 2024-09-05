@@ -201,6 +201,8 @@ private:
 
 	void logSettings();
 
+	std::string getCurrentTime();
+
 	Mode m_mode;
 
 	Counter m_counter;
@@ -216,6 +218,8 @@ private:
 	bool m_isWarningEnabled;
 
 	std::string m_executablePath;
+
+	bool m_streamIsClear = false;
 };
 
 #endif	/* INTERFACE_H */
