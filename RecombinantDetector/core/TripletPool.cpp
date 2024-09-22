@@ -9,7 +9,6 @@
 TripletPool::TripletPool()
 	: savedTriplets(), m_freeTriplets(), m_storageMode(StorageMode::BestTriplet),
 	m_longestMinRecLength(0) {
-	// Do nothing
 }
 
 void TripletPool::setStorageMode(TripletPool::StorageMode newStorageMode) {
@@ -34,11 +33,10 @@ TripletPtr TripletPool::newTriplet(const SequencePtr& child,
 
 void TripletPool::saveTriplet(const SequencePtr& child, const TripletPtr& newTriplet) {
 	if (savedTriplets.find(child) != savedTriplets.end()) {
-		if (m_storageMode == StorageMode::AllTriplets) {
-			savedTriplets[child].push_back(newTriplet);
-		}
-		else {
-			// StorageMode::BEST_TRIPLET
+		switch (m_storageMode)
+		{
+		case TripletPool::StorageMode::BestTriplet:
+		{
 			auto currentBestTriplet = savedTriplets[child][0];
 			auto worseTriplet = newTriplet;
 			if (newTriplet->statisticallyBetter(*currentBestTriplet)) {
@@ -46,8 +44,14 @@ void TripletPool::saveTriplet(const SequencePtr& child, const TripletPtr& newTri
 				worseTriplet = currentBestTriplet;
 			}
 			freeTriplet(worseTriplet);
+			break;
 		}
-
+		case TripletPool::StorageMode::AllTriplets:
+			savedTriplets[child].push_back(newTriplet);
+			break;
+		default:
+			break;
+		}
 	}
 	else {
 		savedTriplets[child] = std::vector<TripletPtr>{ newTriplet };
@@ -93,7 +97,7 @@ void TripletPool::writeToFile(TextFile* fileRecombinants, const std::string& sep
 
 void TripletPool::seekBreakPointPairs(const SequencePtr& child) {
 	if (savedTriplets.find(child) == savedTriplets.end()) {
-		return; // child not found
+		return;
 	}
 
 	for (const auto& triplet : savedTriplets[child]) {

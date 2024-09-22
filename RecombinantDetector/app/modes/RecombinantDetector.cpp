@@ -4,6 +4,7 @@
 
 #include "../UserSettings.h"
 #include "../../utils/ThreadPool.h"
+#include "../../utils/numeric_types.h"
 
 RecombinantDetector::RecombinantDetector(int argc, char** argv)
 	: Run(argc, argv),
@@ -293,120 +294,37 @@ void RecombinantDetector::analyze() {
 	if (threadCount > childSequences.size()) threadCount = childSequences.size();
 
 	ThreadPool pool(threadCount + 1);
-	std::vector<std::future<void>> results;
+	std::vector<std::future<void>> tasks;
 
-	std::vector<size_t> numsSkipped(threadCount);
-	std::vector<size_t> numsComputedExactly(threadCount);
-	std::vector<size_t> numsApproximated(threadCount);
-	std::vector<size_t> numsRecombinantTriplets(threadCount);
-	std::vector<size_t> numsTripletsSkippedByTime(threadCount);
-	std::vector<size_t> performedOuterLoops(threadCount);
-	std::vector<double> minPvals(threadCount);
-	std::vector<TripletPool> tripletPools(threadCount);
-	std::vector<bool> threadIsFinised(threadCount);
-
-	for (int i = 0; i < threadCount; ++i) {
-		results.emplace_back(
-			pool.enqueue([i, &performedOuterLoops, &threadIsFinised, &childSequences, &parentSequences, threadCount, this, &numsSkipped, &numsComputedExactly, &numsApproximated, &minPvals, &numsRecombinantTriplets, &tripletPools, &numsTripletsSkippedByTime]
-				{
-					size_t chunkSize = childSequences.size() / threadCount;
-					size_t begin = i * chunkSize;
-					size_t end = (i < threadCount - 1) ? ((i + 1) * chunkSize - 1) : childSequences.size();
-
-					minPvals[i] = 1.0;
-					performedOuterLoops[i] = 0.0;
-
-					if (UserSettings::instance().calculateAllBreakpoints) {
-						tripletPools[i].setStorageMode(TripletPool::StorageMode::AllTriplets);
-					}
-					else {
-						tripletPools[i].setStorageMode(TripletPool::StorageMode::BestTriplet);
-					}
-
-					for (size_t childIdx = begin; childIdx < end; childIdx++) {
-						const auto& child = childSequences.at(childIdx);
-
-						for (const auto& dad : parentSequences) {
-							if (dad == child) {
-								continue;
-							}
-							if (m_tryToGetDataFromSequenceName && child->isOlderThan(*dad)) {
-								numsTripletsSkippedByTime[i] += parentSequences.size();
-								continue;
-							}
-							performedOuterLoops[i] += 1.0;
-
-							for (const auto& mum : parentSequences) {
-								if (mum == dad || mum == child) {
-									continue;
-								}
-								if (m_tryToGetDataFromSequenceName && child->isOlderThan(*mum)) {
-									numsTripletsSkippedByTime[i] += 1;
-									continue;
-								}
-
-								auto triplet = tripletPools[i].newTriplet(child, dad, mum);
-
-								if (!triplet->hasPVal()) {
-									if (m_fileSkippedTriplets) {
-										m_fileSkippedTriplets->writeLine(triplet->info());
-									}
-									numsSkipped[i]++;
-									continue;
-								}
-
-								if (triplet->hasExactPVal()) {
-									numsComputedExactly[i]++;
-								}
-								else {
-									numsApproximated[i]++;
-								}
-
-								double pValue = triplet->getPValue();
-								addPValIntoHistogram(pValue);
-								if (pValue < minPvals[i]) {
-									minPvals[i] = pValue;
-								}
-
-								auto correctedPVal = StatisticalUtils::dunnSidak(
-									pValue, m_numTripletsForStatCorrection);
-								if (correctedPVal < UserSettings::instance().rejectThreshold) {
-									numsRecombinantTriplets[i]++;
-									if (child->getRecombinantType() == Sequence::RecombinantType::NotRec) {
-										child->setRecombinantType(
-											Sequence::RecombinantType::Short);
-									}
-									tripletPools[i].saveTriplet(child, triplet);
-
-								}
-								else {
-									tripletPools[i].freeTriplet(triplet);
-								}
-							}
-						}
-					}
-					threadIsFinised[i] = true;
-				})
-		);
-	}
-
-	results.emplace_back(pool.enqueue([this, &performedOuterLoops, &numsRecombinantTriplets, &minPvals, &numsTripletsSkippedByTime, &threadIsFinised] {	
+	// IntermediateThreadsData also manages chunk sizes for multithreading
+	IntermediateThreadsData threadsData(threadCount, childSequences, parentSequences);
+	// Managing task
+	tasks.emplace_back(pool.enqueue([this, &threadsData] {
 		time_t lastTime =
 			time(nullptr) - UserSettings::instance().UpdateMonitorInSec - 1;
-		
+
 		while (true) {
 			time_t currentTime = time(nullptr);
 			if (currentTime - lastTime >= UserSettings::instance().UpdateMonitorInSec) {
-				double outerLoops = std::accumulate(performedOuterLoops.begin(), performedOuterLoops.end(), 0);
-				showProgress(outerLoops, false, numsRecombinantTriplets, minPvals, numsTripletsSkippedByTime);
+				double outerLoops = std::accumulate(threadsData.performedOuterLoops.begin(), threadsData.performedOuterLoops.end(), 0);
+				showProgress(outerLoops, false, threadsData.numsRecombinantTriplets, threadsData.minPvals, threadsData.numsTripletsSkippedByTime);
 				lastTime = currentTime;
 
-				if (std::all_of(threadIsFinised.begin(), threadIsFinised.end(), [](bool v) { return v; })) return;
+				if (threadsData.processedChunks == threadsData.chunksCount) return;
 			}
 		}
 		}));
 
-	for (auto&& result : results) result.get();
+	for (int i = 0; i < threadsData.chunksCount; ++i) {
+		tasks.emplace_back(
+			pool.enqueue([this, i, &threadsData]
+				{
+					this->process(threadsData, i);
+				})
+		);
+	}
+
+	for (auto&& task : tasks) task.get();
 
 	m_numRecombinantTriplets = 0;
 	m_numComputedExactly = 0;
@@ -415,25 +333,116 @@ void RecombinantDetector::analyze() {
 	m_numTripletsSkippedByTime = 0;
 
 	for (size_t i = 0; i < threadCount; i++) {
-		m_numSkipped += numsSkipped[i];
-		m_numComputedExactly += numsComputedExactly[i];
-		m_numApproximated += numsApproximated[i];
-		m_numRecombinantTriplets += numsRecombinantTriplets[i];
-		m_numTripletsSkippedByTime += numsTripletsSkippedByTime[i];
-		for (const auto& [child, seqs] : tripletPools[i].savedTriplets) {
+		m_numSkipped += threadsData.numsSkipped[i];
+		m_numComputedExactly += threadsData.numsComputedExactly[i];
+		m_numApproximated += threadsData.numsApproximated[i];
+		m_numRecombinantTriplets += threadsData.numsRecombinantTriplets[i];
+		m_numTripletsSkippedByTime += threadsData.numsTripletsSkippedByTime[i];
+		for (const auto& [child, seqs] : threadsData.tripletPools[i].savedTriplets) {
 			for (const auto& seq : seqs)
 				m_tripletPool.saveTriplet(child, seq);
 		}
 	}
-	m_minPVal = *std::min_element(minPvals.begin(), minPvals.end());
+	m_minPVal = *std::min_element(threadsData.minPvals.begin(), threadsData.minPvals.end());
 
 	if (!UserSettings::instance().calculateNoBreakpoints)
 		for (const auto& child : childSequences) m_tripletPool.seekBreakPointPairs(child);
 
 	/* Progressing finished */
-	showProgress(0.0, true, numsRecombinantTriplets, minPvals, numsTripletsSkippedByTime);
+	showProgress(0.0, true, threadsData.numsRecombinantTriplets, threadsData.minPvals, threadsData.numsTripletsSkippedByTime);
 
 	App::instance().showLog(true);
+}
+
+void RecombinantDetector::process(IntermediateThreadsData& threadData, size_t chunkIdx) {
+	threadData.guard.lock();
+	std::cout << "\nTASK STARTED!!!\n";
+	size_t freeContainerId = ULong::NOT_SET;
+	for (size_t i = 0; i < threadData.containerIsLocked.size(); i++) {
+		if (!threadData.containerIsLocked[i]) {
+			threadData.containerIsLocked[i] = true;
+			freeContainerId = i;
+			break;
+		}
+	}
+	// TODO: add entry to the technical log file
+	if (freeContainerId > threadData.threadCount)
+		std::cout << "WARNING: freeContainerId > threadData.threadCount " << freeContainerId;
+	auto i = freeContainerId;
+	threadData.containerIsLocked[i] = true;
+	threadData.guard.unlock();
+
+	size_t chunkSize = threadData.childSequences.size() / threadData.chunksCount;
+	size_t begin = chunkIdx * chunkSize;
+	size_t end = (chunkIdx < threadData.chunksCount - 1) ? ((chunkIdx + 1) * chunkSize - 1) : threadData.childSequences.size();
+
+	for (size_t childIdx = begin; childIdx < end; childIdx++) {
+		const auto& child = threadData.childSequences.at(childIdx);
+
+		for (const auto& dad : threadData.parentSequences) {
+			if (dad == child) {
+				continue;
+			}
+			if (m_tryToGetDataFromSequenceName && child->isOlderThan(*dad)) {
+				threadData.numsTripletsSkippedByTime[i] += threadData.parentSequences.size();
+				continue;
+			}
+			threadData.performedOuterLoops[i] += 1.0;
+
+			for (const auto& mum : threadData.parentSequences) {
+				if (mum == dad || mum == child) {
+					continue;
+				}
+				if (m_tryToGetDataFromSequenceName && child->isOlderThan(*mum)) {
+					threadData.numsTripletsSkippedByTime[i] += 1;
+					continue;
+				}
+
+				auto triplet = threadData.tripletPools[i].newTriplet(child, dad, mum);
+
+				if (!triplet->hasPVal()) {
+					if (m_fileSkippedTriplets) {
+						m_fileSkippedTriplets->writeLine(triplet->info());
+					}
+					threadData.numsSkipped[i]++;
+					continue;
+				}
+
+				if (triplet->hasExactPVal()) {
+					threadData.numsComputedExactly[i]++;
+				}
+				else {
+					threadData.numsApproximated[i]++;
+				}
+
+				double pValue = triplet->getPValue();
+				addPValIntoHistogram(pValue);
+				if (pValue < threadData.minPvals[i]) {
+					threadData.minPvals[i] = pValue;
+				}
+
+				auto correctedPVal = StatisticalUtils::dunnSidak(
+					pValue, m_numTripletsForStatCorrection);
+				if (correctedPVal < UserSettings::instance().rejectThreshold) {
+					threadData.numsRecombinantTriplets[i]++;
+					if (child->getRecombinantType() == Sequence::RecombinantType::NotRec) {
+						child->setRecombinantType(
+							Sequence::RecombinantType::Short);
+					}
+					threadData.tripletPools[i].saveTriplet(child, triplet);
+
+				}
+				else {
+					threadData.tripletPools[i].freeTriplet(triplet);
+				}
+			}
+		}
+	}
+	std::cout << "\n TASK FINISHED \n";
+	threadData.guard.lock();
+	threadData.containerIsLocked[i] = false;
+	threadData.processedChunks++;
+	threadData.guard.unlock();
 }
 
 void RecombinantDetector::displayResult() {

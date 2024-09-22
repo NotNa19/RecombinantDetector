@@ -17,7 +17,6 @@ class PhyloNode;
 class PhyloTree;
 
 int main(int argc, char** argv) {
-    // Seed the random number generator for later uses
     unsigned int seed = time(nullptr);
     srand(seed);
 

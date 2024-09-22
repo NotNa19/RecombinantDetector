@@ -2,6 +2,10 @@
 
 #include <cmath>
 
+// The approach is taken from the author's implementation of 3SEQ
+// Lam HM, Ratmann O, Boni MF. Improved algorithmic complexity for the 3SEQ recombination detection algorithm, 2018
+// Boni MF, Posada D, Feldman MW. An exact nonparametric method for inferring mosaic structure in sequence triplets, 2007
+
 namespace StatisticalUtils {
 
 	namespace {
