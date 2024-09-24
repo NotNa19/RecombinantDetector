@@ -356,7 +356,7 @@ void RecombinantDetector::analyze() {
 
 void RecombinantDetector::process(IntermediateThreadsData& threadData, size_t chunkIdx) {
 	threadData.guard.lock();
-	std::cout << "\nTASK STARTED!!!\n";
+	// TODO: add entry to the technical log file about starting
 	size_t freeContainerId = ULong::NOT_SET;
 	for (size_t i = 0; i < threadData.containerIsLocked.size(); i++) {
 		if (!threadData.containerIsLocked[i]) {
@@ -438,7 +438,7 @@ void RecombinantDetector::process(IntermediateThreadsData& threadData, size_t ch
 			}
 		}
 	}
-	std::cout << "\n TASK FINISHED \n";
+	// TODO: add entry to the technical log file about finishing
 	threadData.guard.lock();
 	threadData.containerIsLocked[i] = false;
 	threadData.processedChunks++;
