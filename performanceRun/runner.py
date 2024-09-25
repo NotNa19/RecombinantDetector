@@ -2,8 +2,8 @@ import os
 import shutil
 import subprocess
 
-settings_file = "/home/Work/2509Detector/RecombinantDetector/RecombinantDetector/settings/user_settings.rec"
-logs_dir = "/home/Work/2509Detector/RecombinantDetector/RecombinantDetector/build"
+settings_file = "/home/adev/Work/2509Detector/RecombinantDetector/RecombinantDetector/settings/user_settings.rec"
+logs_dir = "/home/adev/Work/2509Detector/RecombinantDetector/RecombinantDetector/build"
 
 def update_threads_count(threads_count):
     with open(settings_file, 'r') as file:
@@ -32,7 +32,7 @@ for i in range(1, 30):
     
     update_threads_count(i)
 
-    args = ["./RecDetector.exe", "-detect", "/home/Work/VirusData/dengue_aligned_short_short.fasta"]
+    args = ["./RecDetector.exe", "-detect", "/home/adev/Work/VirusData/dengue_aligned_short_short.fasta"]
 
     try:
         result = subprocess.run(args, check=True)
