@@ -27,12 +27,12 @@ def move_logs(run_number):
             full_log_path = os.path.join(logs_dir, log_file)
             shutil.move(full_log_path, os.path.join(run_dir, log_file))
 
-for i in range(1, 30):
+for i in range(1, 31):
     print(f"Setting threadsCount to {i} and launching program - Run {i}")
     
     update_threads_count(i)
 
-    args = ["./RecDetector", "-detect", "/home/adev/Work/VirusData/dengue_aligned_short_short.fasta"]
+    args = ["./RecDetector", "-detect", "/home/adev/Work/VirusData/infl_a_aligned.fasta"]
 
     try:
         result = subprocess.run(args, check=True)
