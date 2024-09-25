@@ -32,7 +32,7 @@ for i in range(1, 30):
     
     update_threads_count(i)
 
-    args = ["./RecDetector.exe", "-detect", "/home/adev/Work/VirusData/dengue_aligned_short_short.fasta"]
+    args = ["./RecDetector", "-detect", "/home/adev/Work/VirusData/dengue_aligned_short_short.fasta"]
 
     try:
         result = subprocess.run(args, check=True)
