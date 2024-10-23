@@ -12,8 +12,8 @@ void UserSettings::readSettings(std::string& path) {
 	file >> ignore >> timeThresholdBetweenParentsAndChild;
 	file >> ignore >> multiFileMode;
 	file >> ignore >> threadsCount;
-	file >> ignore >> useSeparateChildFile;
-	file >> ignore >> separateChildFilePath;
+	file >> ignore >> useSeparateParentFile;
+	file >> ignore >> separateParentFilePath;
 	file >> ignore >> sequencesToReadLimitEnabled;
 	file >> ignore >> sequencesToReadLimit;
 	file >> ignore >> pTableFilePath;

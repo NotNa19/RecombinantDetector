@@ -122,6 +122,9 @@ void Run::perform() {
 		m_alignment.excludeMonomorphicColumns();
 		App::instance() << "Number of polymorphic sites: " << m_alignment.activeLength() << "\n";
 	}
+	else {
+		m_alignment.lock();
+	}
 
 	m_alignment.getChildPool().activateSequencesBy1BasedIdxRange(
 		ULong::NOT_SET, ULong::NOT_SET

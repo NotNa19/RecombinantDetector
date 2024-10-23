@@ -56,24 +56,27 @@ void RecombinantDetector::parseCmdLine() {
 	}
 	else {
 		string filePath = m_argVector[2];
-		FastaReader parentFile(filePath, FastaReader::Type::Unknown);
-		if (!parentFile.exists()) {
-			App::instance() << "File \"" << filePath << "\" not found.\n";
-			App::instance().showError(true, true);
-		}
-		parentSeqs = parentFile.read();
+		string parentFilePath;
+		if (UserSettings::instance().useSeparateParentFile) {
+			parentFilePath = UserSettings::instance().separateParentFilePath;
 
-		if (argNum >= 2) {
-			argNum = 2;
-			filePath = m_argVector[3];
-			// THE CHILD PATH IS SPECIFIED MANUALLY.
 			FastaReader childFile(filePath, FastaReader::Type::Unknown);
 			if (!childFile.exists()) {
-				App::instance() << "File \"" << filePath << "\" not found.\n";
+				App::instance() << "Child File \"" << filePath << "\" not found.\n";
 				App::instance().showError(true, true);
 			}
 			childSeqs = childFile.read();
 		}
+		else {
+			parentFilePath = filePath;
+		}
+
+		FastaReader parentFile(parentFilePath, FastaReader::Type::Unknown);
+		if (!parentFile.exists()) {
+			App::instance() << "Parent File \"" << parentFilePath << "\" not found.\n";
+			App::instance().showError(true, true);
+		}
+		parentSeqs = parentFile.read();
 	}
 
 	if (m_tryToGetDataFromSequenceName) {

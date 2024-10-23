@@ -1,9 +1,9 @@
-useHeaderData 0
+useHeaderData 1
 timeThresholdBetweenParentsAndChild 2678400
 multiFileMode 0
-threadsCount 6
-useSeparateChildFile 0
-separateChildFilePath _
+threadsCount 8
+useSeparateParentFile 0
+separateParentFilePath _
 sequencesToReadLimitEnabled 0
 sequencesToReadLimit 500
 pTableFilePath /home/adev/Work/ptable/700table

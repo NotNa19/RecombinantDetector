@@ -111,8 +111,8 @@ void App::logSettings() {
 	(*this) << "Time threshold between parents and child: " << settings.timeThresholdBetweenParentsAndChild << endl;
 	(*this) << "Multi file mode: " << settings.multiFileMode << endl;
 	(*this) << "Threads count: " << settings.threadsCount << endl;
-	(*this) << "Use separate child file enabled: " << settings.useSeparateChildFile << endl;
-	(*this) << "Separate child file path: " << settings.separateChildFilePath << endl;
+	(*this) << "Use separate child file enabled: " << settings.useSeparateParentFile << endl;
+	(*this) << "Separate child file path: " << settings.separateParentFilePath << endl;
 	(*this) << "Sequences to read limit enabled: " << settings.sequencesToReadLimitEnabled << endl;
 	(*this) << "Sequences to read limit: " << settings.sequencesToReadLimit << endl;
 	(*this) << "P-table file path: " << settings.pTableFilePath << endl;

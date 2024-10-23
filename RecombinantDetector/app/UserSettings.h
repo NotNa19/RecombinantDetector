@@ -25,8 +25,8 @@ public:
 	bool multiFileMode = 0;
 
 	size_t threadsCount = 6;
-	bool useSeparateChildFile = 0;
-	std::string separateChildFilePath = "";
+	bool useSeparateParentFile = 0;
+	std::string separateParentFilePath = "";
 	bool sequencesToReadLimitEnabled = 0;
 	size_t sequencesToReadLimit = 100;
 
