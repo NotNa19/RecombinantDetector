@@ -23,7 +23,7 @@ To build a project on Linux using CMake, you need to follow these steps:
 Before starting, you need to generate a P-values table. You can do this for the first time and then reuse it.
 1. In the `build` folder execute `./RecDetector -gen-p table500 500`. The generation may take several minutes.
 2. Move the `table500` to a convenient place.
-3. Open the `RecombinantDetector/settings/UserSettings.rec`.
+3. Open the `RecombinantDetector/settings/UserSettings.json`.
 4. Find the `pTableFilePath` entry and specify the path to the table. For example:
    >pTableFilePath /home/adev/Work/ptable/table500
 
@@ -57,7 +57,7 @@ Now you can finally run the application.
 Перед запуском необходимо сгенерировать таблицу P-значений. Можно сделать это для первого раза и затем переиспользовать её.
 1. В папке `build` выполните `./RecDetector -gen-p table500 500`. Генерация может занять несколько минут.
 2. Переместите получившуюся таблицу в удобное место.
-3. Откройте `RecombinantDetector/settings/UserSettings.rec`.
+3. Откройте `RecombinantDetector/settings/UserSettings.json`.
 4. Найдите поле `pTableFilePath` и укажите путь к таблице. Например,
    >pTableFilePath /home/adev/Work/ptable/table500
 
@@ -78,8 +78,8 @@ Now you can finally run the application.
    
 
 
-## `UserSettings.rec` файл и настройка приложения
-Пользователь может использовать `source/setings/UserSettings.rec` файл для настройки приложения. Ниже приведены самые важные. Стоит отметить, что в текущей реализации порядок настроек в файле важен — пользователю рекомендуется менять только значения. 
+## `UserSettings.json` файл и настройка приложения
+Пользователь может использовать `source/setings/UserSettings.json` файл для настройки приложения. Ниже приведены самые важные. Стоит отметить, что в текущей реализации порядок настроек в файле важен — пользователю рекомендуется менять только значения. 
 
 #### 1. Работа с заголовками fasta файлов
 Зачастую fasta файлы имеют достаточно важную информацию в своём заголовке. Например, это может выглядеть так:
@@ -89,7 +89,7 @@ Now you can finally run the application.
 Очевидно, что в тройке последовательностей (`Parent1`, `Parent2`, `Child`), геном `Child` не может быть результатом рекомбинации `Parent1` и `Parent2`, если секвенирование генома `Child` произошло раньше чем секвенирование `Parent1` или `Parent2`.
 
 Для включения проверок такого типа мы используем флаг `useHeaderData`. Флаг `timeThresholdBetweenParentsAndChild` необходим для того, чтобы указать допустимый промежуток секвенирования родителя и ребенка (в секундах).
-Например, при таких настройках в `UserSettings.rec`:
+Например, при таких настройках в `UserSettings.json`:
 
 >useHeaderData 1  
 >timeThresholdBetweenParentsAndChild 2678400
@@ -111,7 +111,7 @@ Now you can finally run the application.
 >outputDirPath _
 
 #### 5. Другие параметры
-В файле `UserSettings.rec` также хранятся некоторые настройки, влияющие на работу алгоритма. Смысл большинства понятен из названия, но в будущем руководство будет дополнено и этими деталями.
+В файле `UserSettings.json` также хранятся некоторые настройки, влияющие на работу алгоритма. Смысл большинства понятен из названия, но руководство будет дополнено и этими деталями.
 
 ## Тестовые данные
 Для тестирования приложения мы использовали искуственно созданные и реальные данные.
