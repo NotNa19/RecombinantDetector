@@ -1,0 +1,21 @@
+{
+    "useHeaderData": false,
+    "timeThresholdBetweenParentsAndChild": 2678400,
+    "multiFileMode": false,
+    "threadsCount": 10,
+    "useSeparateParentFile": false,
+    "separateParentFilePath": "_",
+    "sequencesToReadLimitEnabled": false,
+    "sequencesToReadLimit": 500,
+    "pTableFilePath": "D://p_vals/PVT.3SEQ.2017.700",
+    "minLongRecombinationThreshold": 100,
+    "rejectThreshold": 0.05,
+    "useAllSites": true,
+    "removeIdenticalSequences": false,
+    "minIdenticalSequencesDistance": 0,
+    "writeSkippedTriplets": false,
+    "simplifiedOutput": true,
+    "outputDirPath": "_",
+    "calculateAllBreakpoints": false,
+    "calculateNoBreakpoints": false
+}

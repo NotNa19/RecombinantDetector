@@ -85,7 +85,7 @@ const std::string App::align(std::string firstIndent) {
 }
 
 void App::startProgram(const std::string& startMessage) {
-	std::string settingsPath = "../settings/user_settings.rec";
+	std::string settingsPath = "../settings/user_settings.json";
 	UserSettings::instance().readSettings(settingsPath);
 	clear();
 	logSettings();

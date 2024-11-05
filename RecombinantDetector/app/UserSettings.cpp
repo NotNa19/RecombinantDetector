@@ -1,35 +1,42 @@
 #include "UserSettings.h"
+#include "../include/json.hpp"
+
 #include <iostream>
 #include <fstream>
+
+using json = nlohmann::json;
 
 void UserSettings::readSettings(std::string& path) {
 	std::ifstream file(path);
 	if (!file.is_open()) {
-		std::cerr << "Cannot open the user_settings.rec" << std::endl;
+		std::cerr << "Cannot open the "<< path << std::endl;
 	}
-	std::string ignore;
-	file >> ignore >> tryToGetDataFromSequenceName;
-	file >> ignore >> timeThresholdBetweenParentsAndChild;
-	file >> ignore >> multiFileMode;
-	file >> ignore >> threadsCount;
-	file >> ignore >> useSeparateParentFile;
-	file >> ignore >> separateParentFilePath;
-	file >> ignore >> sequencesToReadLimitEnabled;
-	file >> ignore >> sequencesToReadLimit;
-	file >> ignore >> pTableFilePath;
-	file >> ignore >> minLongRecombinationThreshold;
-	file >> ignore >> rejectThreshold;
-	file >> ignore >> useAllSites;
-	file >> ignore >> removeIdenticalSequences;
-	file >> ignore >> minIdenticalSequencesDistance;
-	file >> ignore >> writeSkippedTriplets;
-	file >> ignore >> simplifiedOutput;
-	file >> ignore >> outputDirPath;
+
+	json jsonSettings;
+	file >> jsonSettings;
+
+	tryToGetDataFromSequenceName = jsonSettings["useHeaderData"];
+	timeThresholdBetweenParentsAndChild = jsonSettings["timeThresholdBetweenParentsAndChild"];
+	multiFileMode = jsonSettings["multiFileMode"];
+	threadsCount = jsonSettings["threadsCount"];
+	useSeparateParentFile = jsonSettings["useSeparateParentFile"];
+	separateParentFilePath = jsonSettings["separateParentFilePath"];
+	sequencesToReadLimitEnabled = jsonSettings["sequencesToReadLimitEnabled"];
+	sequencesToReadLimit = jsonSettings["sequencesToReadLimit"];
+	pTableFilePath = jsonSettings["pTableFilePath"];
+	minLongRecombinationThreshold = jsonSettings["minLongRecombinationThreshold"];
+	rejectThreshold = jsonSettings["rejectThreshold"];
+	useAllSites = jsonSettings["useAllSites"];
+	removeIdenticalSequences = jsonSettings["removeIdenticalSequences"];
+	minIdenticalSequencesDistance = jsonSettings["minIdenticalSequencesDistance"];
+	writeSkippedTriplets = jsonSettings["writeSkippedTriplets"];
+	simplifiedOutput = jsonSettings["simplifiedOutput"];
+	outputDirPath = jsonSettings["outputDirPath"];
 	// TODO: checking the path for existence
 	if (outputDirPath == "_") outputDirPath = "";
 	else concatPaths();
-	file >> ignore >> calculateAllBreakpoints;
-	file >> ignore >> calculateNoBreakpoints;
+	calculateAllBreakpoints = jsonSettings["calculateAllBreakpoints"];
+	calculateNoBreakpoints = jsonSettings["calculateNoBreakpoints"];
 
 	file.close();
 }

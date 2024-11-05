@@ -36,6 +36,7 @@ include_directories(
     ./app/modes
     ./core
     ./utils
+    ./include
 )
 
 add_executable (RecDetector ${SOURCES})
